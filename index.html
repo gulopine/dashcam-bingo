@@ -66,6 +66,7 @@
     <section class="card" id="bingo-card" aria-label="Dashcam bingo card"></section>
   </main>
 
+  <script src="./video-attributes.js"></script>
   <script>
     const locations = [
       "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia",
@@ -80,6 +81,9 @@
 
     const CENTER_INDEX = 12;
     const CENTER_TEXT = "DASHCAM FOOTAGE";
+    const LOCATION_COUNT = 5;
+    const NON_CENTER_SPACES = 24;
+    const ATTRIBUTE_COUNT = NON_CENTER_SPACES - LOCATION_COUNT;
 
     function shuffle(items) {
       const copy = [...items];
@@ -92,7 +96,10 @@
 
     function buildCard() {
       const card = document.getElementById("bingo-card");
-      const picks = shuffle(locations).slice(0, 24);
+      const locationPicks = shuffle(locations).slice(0, LOCATION_COUNT);
+      const attributePicks = shuffle(window.videoAttributes).slice(0, ATTRIBUTE_COUNT);
+      const nonCenterIndexes = Array.from({ length: 25 }, (_, i) => i).filter((i) => i !== CENTER_INDEX);
+      const locationIndexes = new Set(shuffle(nonCenterIndexes).slice(0, LOCATION_COUNT));
 
       for (let i = 0; i < 25; i++) {
         const cell = document.createElement("div");
@@ -101,8 +108,10 @@
         if (i === CENTER_INDEX) {
           cell.classList.add("free");
           cell.textContent = CENTER_TEXT;
+        } else if (locationIndexes.has(i)) {
+          cell.textContent = locationPicks.shift();
         } else {
-          cell.textContent = picks.shift();
+          cell.textContent = attributePicks.shift();
         }
 
         card.appendChild(cell);
