@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashcam Bingo</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #111827;
+      color: #f9fafb;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
+
+    main {
+      width: min(92vw, 760px);
+    }
+
+    h1 {
+      text-align: center;
+      margin: 0 0 1rem;
+      letter-spacing: 0.04em;
+    }
+
+    .card {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+    }
+
+    .square {
+      aspect-ratio: 1;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.5rem;
+      background: #1f2937;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0.4rem;
+      font-size: clamp(0.7rem, 1.8vw, 0.95rem);
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .free {
+      background: #f59e0b;
+      color: #111827;
+      border-color: #fbbf24;
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Dashcam Bingo</h1>
+    <section class="card" id="bingo-card" aria-label="Dashcam bingo card"></section>
+  </main>
+
+  <script>
+    const locations = [
+      "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia",
+      "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland",
+      "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+      "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
+      "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
+      "West Virginia", "Wisconsin", "Wyoming", "District of Columbia",
+      "Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador", "Nova Scotia", "Ontario",
+      "Prince Edward Island", "Quebec", "Saskatchewan"
+    ];
+
+    const CENTER_INDEX = 12;
+    const CENTER_TEXT = "DASHCAM FOOTAGE";
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function buildCard() {
+      const card = document.getElementById("bingo-card");
+      const picks = shuffle(locations).slice(0, 24);
+
+      for (let i = 0; i < 25; i++) {
+        const cell = document.createElement("div");
+        cell.className = "square";
+
+        if (i === CENTER_INDEX) {
+          cell.classList.add("free");
+          cell.textContent = CENTER_TEXT;
+        } else {
+          cell.textContent = picks.shift();
+        }
+
+        card.appendChild(cell);
+      }
+    }
+
+    buildCard();
+  </script>
+</body>
+</html>
