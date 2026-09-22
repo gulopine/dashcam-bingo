@@ -40,4 +40,7 @@ window.videoAttributes = [
   "Reversing into a colliion",
   "Animals",
   "Hydroplaning",
+  "Rain",
+  "Snow",
+  "Drunk driver",
 ];
