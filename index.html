@@ -10,10 +10,10 @@
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
       --page-padding: 0.25rem;
       --message-reserve: 3rem;
-      --base-gap: 0.5rem;
+      --base-gap: 0;
       --base-border-width: 2px;
       --base-cell-padding: 0.4rem;
-      --base-font-size: clamp(0.62rem, 1.8vmin, 0.95rem);
+      --base-font-size: clamp(0.56rem, 1.62vmin, 0.86rem);
       --base-line-clamp: 4;
     }
 
@@ -120,34 +120,32 @@
     }
 
     body[data-fit-mode="compact"] {
-      --fit-gap: 0.35rem;
+      --fit-gap: 0;
       --fit-border-width: 1.5px;
       --fit-cell-padding: 0.28rem;
-      --fit-font-size: clamp(0.54rem, 1.45vmin, 0.8rem);
+      --fit-font-size: clamp(0.49rem, 1.31vmin, 0.72rem);
       --fit-line-clamp: 3;
     }
 
     body[data-fit-mode="ultra-compact"] {
-      --fit-gap: 0.2rem;
+      --fit-gap: 0;
       --fit-border-width: 1px;
       --fit-cell-padding: 0.18rem;
-      --fit-font-size: clamp(0.48rem, 1.15vmin, 0.7rem);
+      --fit-font-size: clamp(0.43rem, 1.04vmin, 0.63rem);
       --fit-line-clamp: 2;
     }
 
     @media (max-width: 430px), (max-height: 760px) {
       :root {
-        --base-gap: 0.42rem;
         --base-cell-padding: 0.32rem;
-        --base-font-size: clamp(0.58rem, 1.65vmin, 0.86rem);
+        --base-font-size: clamp(0.52rem, 1.49vmin, 0.77rem);
       }
     }
 
     @media (max-width: 390px), (max-height: 680px) {
       :root {
-        --base-gap: 0.35rem;
         --base-cell-padding: 0.28rem;
-        --base-font-size: clamp(0.55rem, 1.45vmin, 0.8rem);
+        --base-font-size: clamp(0.5rem, 1.31vmin, 0.72rem);
       }
     }
   </style>
