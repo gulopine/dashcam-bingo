@@ -215,6 +215,14 @@
       return copy;
     }
 
+    function pickUniqueRandom(items, count) {
+      const unique = [...new Set(shuffle(items))];
+      if (unique.length < count) {
+        throw new Error("Not enough unique spaces to build card.");
+      }
+      return unique.slice(0, count);
+    }
+
     function getBingoCount(selectedIndexes) {
       return BINGO_LINES.reduce(
         (count, line) => count + Number(line.every((index) => selectedIndexes.has(index))),
@@ -295,8 +303,8 @@
       const bingoMessage = document.getElementById("bingo-message");
       const selectedIndexes = new Set([CENTER_INDEX]);
       let announcedBingoCount = 0;
-      const locationPicks = shuffle(locations).slice(0, LOCATION_COUNT);
-      const attributePicks = shuffle(window.videoAttributes).slice(0, ATTRIBUTE_COUNT);
+      const locationPicks = pickUniqueRandom(locations, LOCATION_COUNT);
+      const attributePicks = pickUniqueRandom(window.videoAttributes, ATTRIBUTE_COUNT);
       const nonCenterIndexes = Array.from({ length: 25 }, (_, i) => i).filter((i) => i !== CENTER_INDEX);
       const locationIndexes = new Set(shuffle(nonCenterIndexes).slice(0, LOCATION_COUNT));
 
