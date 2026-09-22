@@ -12,29 +12,25 @@
 
     body {
       margin: 0;
-      min-height: 100vh;
+      min-height: 100dvh;
       display: grid;
       place-items: center;
       background: #111827;
       color: #f9fafb;
-      padding: 1rem;
+      padding: 0.25rem;
       box-sizing: border-box;
+      overflow: hidden;
     }
 
     main {
-      width: min(92vw, 760px);
-    }
-
-    h1 {
-      text-align: center;
-      margin: 0 0 1rem;
-      letter-spacing: 0.04em;
+      width: min(calc(100vw - 0.5rem), calc(100dvh - 0.5rem), 760px);
     }
 
     .card {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 0.5rem;
+      aspect-ratio: 1;
     }
 
     .square {
@@ -48,7 +44,7 @@
       justify-content: center;
       text-align: center;
       padding: 0.4rem;
-      font-size: clamp(0.7rem, 1.8vw, 0.95rem);
+      font-size: clamp(0.62rem, 1.8vmin, 0.95rem);
       font-weight: 600;
       line-height: 1.2;
       cursor: pointer;
@@ -68,13 +64,34 @@
     .free {
       cursor: default;
     }
+
+    .bingo-message {
+      position: fixed;
+      top: 0.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      background: #f59e0b;
+      color: #111827;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease-in-out;
+    }
+
+    .bingo-message.show {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
   <main>
-    <h1>Dashcam Bingo</h1>
     <section class="card" id="bingo-card" aria-label="Dashcam bingo card"></section>
   </main>
+  <p class="bingo-message" id="bingo-message" role="status" aria-live="polite"></p>
 
   <script src="./video-attributes.js"></script>
   <script>
@@ -118,14 +135,18 @@
       return copy;
     }
 
-    function hasBingo(selectedIndexes) {
-      return BINGO_LINES.some((line) => line.every((index) => selectedIndexes.has(index)));
+    function getBingoCount(selectedIndexes) {
+      return BINGO_LINES.reduce(
+        (count, line) => count + Number(line.every((index) => selectedIndexes.has(index))),
+        0
+      );
     }
 
     function buildCard() {
       const card = document.getElementById("bingo-card");
+      const bingoMessage = document.getElementById("bingo-message");
       const selectedIndexes = new Set([CENTER_INDEX]);
-      let bingoAnnounced = false;
+      let announcedBingoCount = 0;
       const locationPicks = shuffle(locations).slice(0, LOCATION_COUNT);
       const attributePicks = shuffle(window.videoAttributes).slice(0, ATTRIBUTE_COUNT);
       const nonCenterIndexes = Array.from({ length: 25 }, (_, i) => i).filter((i) => i !== CENTER_INDEX);
@@ -162,12 +183,17 @@
 
             cell.setAttribute("aria-pressed", String(isSelected));
 
-            const bingo = hasBingo(selectedIndexes);
-            if (bingo && !bingoAnnounced) {
-              bingoAnnounced = true;
-              window.alert("BINGO");
-            } else if (!bingo) {
-              bingoAnnounced = false;
+            const bingoCount = getBingoCount(selectedIndexes);
+            if (bingoCount > 0) {
+              if (bingoCount !== announcedBingoCount) {
+                const prefix = bingoCount > 1 ? `${bingoCount}X ` : "";
+                bingoMessage.textContent = `${prefix}BINGO!`;
+                announcedBingoCount = bingoCount;
+              }
+              bingoMessage.classList.add("show");
+            } else {
+              announcedBingoCount = 0;
+              bingoMessage.classList.remove("show");
             }
           });
         }
