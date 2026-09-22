@@ -8,6 +8,13 @@
     :root {
       color-scheme: light dark;
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      --page-padding: 0.25rem;
+      --message-reserve: 3rem;
+      --base-gap: 0.5rem;
+      --base-border-width: 2px;
+      --base-cell-padding: 0.4rem;
+      --base-font-size: clamp(0.62rem, 1.8vmin, 0.95rem);
+      --base-line-clamp: 4;
     }
 
     body {
@@ -17,25 +24,37 @@
       place-items: center;
       background: #111827;
       color: #f9fafb;
-      padding: 0.25rem;
+      padding-top: calc(var(--page-padding) + env(safe-area-inset-top));
+      padding-right: calc(var(--page-padding) + env(safe-area-inset-right));
+      padding-bottom: calc(var(--page-padding) + env(safe-area-inset-bottom));
+      padding-left: calc(var(--page-padding) + env(safe-area-inset-left));
       box-sizing: border-box;
       overflow: hidden;
+      --fit-gap: var(--base-gap);
+      --fit-border-width: var(--base-border-width);
+      --fit-cell-padding: var(--base-cell-padding);
+      --fit-font-size: var(--base-font-size);
+      --fit-line-clamp: var(--base-line-clamp);
     }
 
     main {
-      width: min(calc(100vw - 0.5rem), calc(100dvh - 0.5rem), 760px);
+      width: min(
+        calc(100vw - (2 * var(--page-padding)) - env(safe-area-inset-left) - env(safe-area-inset-right)),
+        calc(100dvh - (2 * var(--page-padding)) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--message-reserve)),
+        760px
+      );
     }
 
     .card {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 0.5rem;
+      gap: var(--fit-gap);
       aspect-ratio: 1;
     }
 
     .square {
       aspect-ratio: 1;
-      border: 2px solid #e5e7eb;
+      border: var(--fit-border-width) solid #e5e7eb;
       border-radius: 0.5rem;
       background: #1f2937;
       color: inherit;
@@ -43,14 +62,28 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 0.4rem;
-      font-size: clamp(0.62rem, 1.8vmin, 0.95rem);
+      padding: var(--fit-cell-padding);
+      font-size: var(--fit-font-size);
       font-weight: 600;
       line-height: 1.2;
       cursor: pointer;
       font: inherit;
       appearance: none;
       width: 100%;
+      overflow: hidden;
+    }
+
+    .square-label {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+      line-height: 1.2;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: var(--fit-line-clamp);
     }
 
     .square.selected,
@@ -67,7 +100,7 @@
 
     .bingo-message {
       position: fixed;
-      top: 0.5rem;
+      top: calc(0.5rem + env(safe-area-inset-top));
       left: 50%;
       transform: translateX(-50%);
       margin: 0;
@@ -84,6 +117,38 @@
 
     .bingo-message.show {
       opacity: 1;
+    }
+
+    body[data-fit-mode="compact"] {
+      --fit-gap: 0.35rem;
+      --fit-border-width: 1.5px;
+      --fit-cell-padding: 0.28rem;
+      --fit-font-size: clamp(0.54rem, 1.45vmin, 0.8rem);
+      --fit-line-clamp: 3;
+    }
+
+    body[data-fit-mode="ultra-compact"] {
+      --fit-gap: 0.2rem;
+      --fit-border-width: 1px;
+      --fit-cell-padding: 0.18rem;
+      --fit-font-size: clamp(0.48rem, 1.15vmin, 0.7rem);
+      --fit-line-clamp: 2;
+    }
+
+    @media (max-width: 430px), (max-height: 760px) {
+      :root {
+        --base-gap: 0.42rem;
+        --base-cell-padding: 0.32rem;
+        --base-font-size: clamp(0.58rem, 1.65vmin, 0.86rem);
+      }
+    }
+
+    @media (max-width: 390px), (max-height: 680px) {
+      :root {
+        --base-gap: 0.35rem;
+        --base-cell-padding: 0.28rem;
+        --base-font-size: clamp(0.55rem, 1.45vmin, 0.8rem);
+      }
     }
   </style>
 </head>
@@ -111,6 +176,23 @@
     const LOCATION_COUNT = 5;
     const NON_CENTER_SPACES = 24;
     const ATTRIBUTE_COUNT = NON_CENTER_SPACES - LOCATION_COUNT;
+    const FIT_MODES = ["normal", "compact", "ultra-compact"];
+    const LOCATION_SHORT_LABELS = {
+      "District of Columbia": "D.C.",
+      "British Columbia": "B.C.",
+      "Newfoundland and Labrador": "NFLD & LAB",
+      "North Carolina": "N. Carolina",
+      "South Carolina": "S. Carolina",
+      "North Dakota": "N. Dakota",
+      "South Dakota": "S. Dakota",
+      "West Virginia": "W. Virginia",
+      "New Hampshire": "N. Hampshire",
+      "New Jersey": "N. Jersey",
+      "New Mexico": "N. Mexico",
+      "New York": "N.Y.",
+      "Rhode Island": "R.I.",
+      "Prince Edward Island": "P.E.I."
+    };
     const BINGO_LINES = [
       [0, 1, 2, 3, 4],
       [5, 6, 7, 8, 9],
@@ -142,6 +224,74 @@
       );
     }
 
+    function getCompactWordsLabel(text) {
+      const words = text.split(/\s+/).filter(Boolean);
+      if (words.length < 2) {
+        return text;
+      }
+
+      const lastWord = words[words.length - 1];
+      const initials = words.slice(0, -1).map((word) => `${word[0].toUpperCase()}.`);
+      const compact = [...initials, lastWord].join(" ");
+      return compact.length < text.length ? compact : text;
+    }
+
+    function formatLocationLabel(location) {
+      if (LOCATION_SHORT_LABELS[location]) {
+        return LOCATION_SHORT_LABELS[location];
+      }
+
+      if (location.length <= 16) {
+        return location;
+      }
+
+      const compact = getCompactWordsLabel(location);
+      if (compact.length <= 16) {
+        return compact;
+      }
+
+      return `${location.slice(0, 15)}…`;
+    }
+
+    function setFitMode(mode) {
+      document.body.dataset.fitMode = mode;
+    }
+
+    function isCardFittingViewport() {
+      const viewport = window.visualViewport;
+      const viewportWidth = viewport ? viewport.width : window.innerWidth;
+      const viewportHeight = viewport ? viewport.height : window.innerHeight;
+      const mainRect = document.querySelector("main").getBoundingClientRect();
+      const messageRect = document.getElementById("bingo-message").getBoundingClientRect();
+      const fitsViewport =
+        mainRect.width <= viewportWidth + 0.5 &&
+        mainRect.height <= viewportHeight + 0.5;
+      const clearsMessage = mainRect.top >= messageRect.bottom - 0.5;
+      return fitsViewport && clearsMessage;
+    }
+
+    function applyBestFitMode() {
+      for (const mode of FIT_MODES) {
+        setFitMode(mode);
+        if (isCardFittingViewport()) {
+          return;
+        }
+      }
+      setFitMode(FIT_MODES[FIT_MODES.length - 1]);
+    }
+
+    let fitFrame = null;
+    function scheduleFitCheck() {
+      if (fitFrame !== null) {
+        cancelAnimationFrame(fitFrame);
+      }
+
+      fitFrame = requestAnimationFrame(() => {
+        applyBestFitMode();
+        fitFrame = null;
+      });
+    }
+
     function buildCard() {
       const card = document.getElementById("bingo-card");
       const bingoMessage = document.getElementById("bingo-message");
@@ -156,19 +306,23 @@
 
       for (let i = 0; i < 25; i++) {
         const cell = document.createElement("button");
+        const cellLabel = document.createElement("span");
         cell.type = "button";
         cell.className = "square";
+        cellLabel.className = "square-label";
 
         if (i === CENTER_INDEX) {
           cell.classList.add("free");
-          cell.textContent = CENTER_TEXT;
+          cellLabel.textContent = CENTER_TEXT;
           cell.setAttribute("aria-pressed", "true");
           cell.disabled = true;
         } else if (locationIndexes.has(i)) {
-          cell.textContent = locationPicks.shift();
+          cellLabel.textContent = formatLocationLabel(locationPicks.shift());
         } else {
-          cell.textContent = attributePicks.shift();
+          cellLabel.textContent = attributePicks.shift();
         }
+
+        cell.appendChild(cellLabel);
 
         if (i !== CENTER_INDEX) {
           cell.setAttribute("aria-pressed", "false");
@@ -200,9 +354,16 @@
 
         card.appendChild(cell);
       }
+
+      scheduleFitCheck();
     }
 
     buildCard();
+    window.addEventListener("resize", scheduleFitCheck, { passive: true });
+    window.addEventListener("orientationchange", scheduleFitCheck, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", scheduleFitCheck, { passive: true });
+    }
   </script>
 </body>
 </html>
