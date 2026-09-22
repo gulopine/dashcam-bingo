@@ -94,6 +94,14 @@
       font-weight: 800;
     }
 
+    .square.location-square {
+      font-size: clamp(0.5rem, 1.4vmin, 0.74rem);
+    }
+
+    .square.location-square .square-label {
+      -webkit-line-clamp: 5;
+    }
+
     .free {
       cursor: default;
     }
@@ -282,6 +290,7 @@
           cell.setAttribute("aria-pressed", "true");
           cell.disabled = true;
         } else if (locationIndexes.has(i)) {
+          cell.classList.add("location-square");
           cellLabel.textContent = formatLocationLabel(locationPicks.shift());
         } else {
           cellLabel.textContent = attributePicks.shift();
