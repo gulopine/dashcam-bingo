@@ -77,4 +77,8 @@ window.videoAttributes = [
   "Car totaled",
   "No insurance",
   "Teenager",
+  "Anonymous",
+  "Four-way stop",
+  "Turn from wrong lane",
+  "Tow truck",
 ];
