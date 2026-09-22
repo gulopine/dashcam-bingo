@@ -175,22 +175,6 @@
     const NON_CENTER_SPACES = 24;
     const ATTRIBUTE_COUNT = NON_CENTER_SPACES - LOCATION_COUNT;
     const FIT_MODES = ["normal", "compact", "ultra-compact"];
-    const LOCATION_SHORT_LABELS = {
-      "District of Columbia": "D.C.",
-      "British Columbia": "B.C.",
-      "Newfoundland and Labrador": "NFLD & LAB",
-      "North Carolina": "N. Carolina",
-      "South Carolina": "S. Carolina",
-      "North Dakota": "N. Dakota",
-      "South Dakota": "S. Dakota",
-      "West Virginia": "W. Virginia",
-      "New Hampshire": "N. Hampshire",
-      "New Jersey": "N. Jersey",
-      "New Mexico": "N. Mexico",
-      "New York": "N.Y.",
-      "Rhode Island": "R.I.",
-      "Prince Edward Island": "P.E.I."
-    };
     const BINGO_LINES = [
       [0, 1, 2, 3, 4],
       [5, 6, 7, 8, 9],
@@ -230,33 +214,8 @@
       );
     }
 
-    function getCompactWordsLabel(text) {
-      const words = text.split(/\s+/).filter(Boolean);
-      if (words.length < 2) {
-        return text;
-      }
-
-      const lastWord = words[words.length - 1];
-      const initials = words.slice(0, -1).map((word) => `${word[0].toUpperCase()}.`);
-      const compact = [...initials, lastWord].join(" ");
-      return compact.length < text.length ? compact : text;
-    }
-
     function formatLocationLabel(location) {
-      if (LOCATION_SHORT_LABELS[location]) {
-        return LOCATION_SHORT_LABELS[location];
-      }
-
-      if (location.length <= 16) {
-        return location;
-      }
-
-      const compact = getCompactWordsLabel(location);
-      if (compact.length <= 16) {
-        return compact;
-      }
-
-      return `${location.slice(0, 15)}…`;
+      return location;
     }
 
     function setFitMode(mode) {
