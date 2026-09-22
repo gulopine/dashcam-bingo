@@ -47,4 +47,7 @@ window.videoAttributes = [
   "Police",
   "Fire truck",
   "Ambulance",
+  "Horn honking",
+  "Airbags",
+  "Mailbox",
 ];
