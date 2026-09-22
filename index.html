@@ -42,6 +42,7 @@
       border: 2px solid #e5e7eb;
       border-radius: 0.5rem;
       background: #1f2937;
+      color: inherit;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -50,13 +51,22 @@
       font-size: clamp(0.7rem, 1.8vw, 0.95rem);
       font-weight: 600;
       line-height: 1.2;
+      cursor: pointer;
+      font: inherit;
+      appearance: none;
+      width: 100%;
     }
 
+    .square.selected,
     .free {
       background: #f59e0b;
       color: #111827;
       border-color: #fbbf24;
       font-weight: 800;
+    }
+
+    .free {
+      cursor: default;
     }
   </style>
 </head>
@@ -84,6 +94,20 @@
     const LOCATION_COUNT = 5;
     const NON_CENTER_SPACES = 24;
     const ATTRIBUTE_COUNT = NON_CENTER_SPACES - LOCATION_COUNT;
+    const BINGO_LINES = [
+      [0, 1, 2, 3, 4],
+      [5, 6, 7, 8, 9],
+      [10, 11, 12, 13, 14],
+      [15, 16, 17, 18, 19],
+      [20, 21, 22, 23, 24],
+      [0, 5, 10, 15, 20],
+      [1, 6, 11, 16, 21],
+      [2, 7, 12, 17, 22],
+      [3, 8, 13, 18, 23],
+      [4, 9, 14, 19, 24],
+      [0, 6, 12, 18, 24],
+      [4, 8, 12, 16, 20]
+    ];
 
     function shuffle(items) {
       const copy = [...items];
@@ -94,24 +118,58 @@
       return copy;
     }
 
+    function hasBingo(selectedIndexes) {
+      return BINGO_LINES.some((line) => line.every((index) => selectedIndexes.has(index)));
+    }
+
     function buildCard() {
       const card = document.getElementById("bingo-card");
+      const selectedIndexes = new Set([CENTER_INDEX]);
+      let bingoAnnounced = false;
       const locationPicks = shuffle(locations).slice(0, LOCATION_COUNT);
       const attributePicks = shuffle(window.videoAttributes).slice(0, ATTRIBUTE_COUNT);
       const nonCenterIndexes = Array.from({ length: 25 }, (_, i) => i).filter((i) => i !== CENTER_INDEX);
       const locationIndexes = new Set(shuffle(nonCenterIndexes).slice(0, LOCATION_COUNT));
 
+      card.innerHTML = "";
+
       for (let i = 0; i < 25; i++) {
-        const cell = document.createElement("div");
+        const cell = document.createElement("button");
+        cell.type = "button";
         cell.className = "square";
 
         if (i === CENTER_INDEX) {
           cell.classList.add("free");
           cell.textContent = CENTER_TEXT;
+          cell.setAttribute("aria-pressed", "true");
+          cell.disabled = true;
         } else if (locationIndexes.has(i)) {
           cell.textContent = locationPicks.shift();
         } else {
           cell.textContent = attributePicks.shift();
+        }
+
+        if (i !== CENTER_INDEX) {
+          cell.setAttribute("aria-pressed", "false");
+          cell.addEventListener("click", () => {
+            const isSelected = cell.classList.toggle("selected");
+
+            if (isSelected) {
+              selectedIndexes.add(i);
+            } else {
+              selectedIndexes.delete(i);
+            }
+
+            cell.setAttribute("aria-pressed", String(isSelected));
+
+            const bingo = hasBingo(selectedIndexes);
+            if (bingo && !bingoAnnounced) {
+              bingoAnnounced = true;
+              window.alert("BINGO");
+            } else if (!bingo) {
+              bingoAnnounced = false;
+            }
+          });
         }
 
         card.appendChild(cell);
