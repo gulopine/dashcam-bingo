@@ -22,7 +22,6 @@ window.videoAttributes = [
   "Crashed into a building",
   "Roundabout",
   "Asleep at the wheel",
-  "No headlights at night",
   "Distracted by phone",
   "Parked car",
   "Head-on collision",
@@ -77,4 +76,5 @@ window.videoAttributes = [
   "Crash with no damage",
   "Car totaled",
   "No insurance",
+  "Teenager",
 ];
