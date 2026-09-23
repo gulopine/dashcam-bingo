@@ -178,10 +178,12 @@
     ];
 
     const CENTER_INDEX = 12;
-    const CENTER_TEXT = "DASHCAM FOOTAGE";
+    const CENTER_TEXT = "DASHCAM";
     const LOCATION_COUNT = 5;
     const NON_CENTER_SPACES = 24;
     const ATTRIBUTE_COUNT = NON_CENTER_SPACES - LOCATION_COUNT;
+    const LEGENDARY_CAP = 1;
+    const RARE_CAP = 3;
     const FIT_MODES = ["normal", "compact", "ultra-compact"];
     const BINGO_LINES = [
       [0, 1, 2, 3, 4],
@@ -207,12 +209,49 @@
       return copy;
     }
 
-    function pickUniqueRandom(items, count) {
-      const unique = [...new Set(shuffle(items))];
+    function pickUniqueRandom(items, count, excluded = new Set()) {
+      const unique = [...new Set(shuffle(items))].filter((item) => !excluded.has(item));
       if (unique.length < count) {
         throw new Error("Not enough unique spaces to build card.");
       }
       return unique.slice(0, count);
+    }
+
+    function getAttributePicks() {
+      const picks = [];
+      const used = new Set();
+      const requestedLegendaryCount = Math.random() < 0.3 ? LEGENDARY_CAP : 0;
+      const requestedRareCount = Array.from({ length: RARE_CAP }, () => Math.random() < 0.6).filter(Boolean).length;
+      const legendaryPool = [...new Set(window.videoAttributes.legendary)];
+      const rarePool = [...new Set(window.videoAttributes.rare)];
+      const commonPool = [...new Set(window.videoAttributes.common)];
+      const getAvailableCount = (items) => items.filter((item) => !used.has(item)).length;
+
+      const addPicks = (items, count) => {
+        if (count === 0) {
+          return;
+        }
+        const unique = shuffle(items).filter((item) => !used.has(item));
+        if (unique.length < count) {
+          throw new Error("Not enough unique spaces to build card.");
+        }
+        const nextPicks = unique.slice(0, count);
+        nextPicks.forEach((item) => used.add(item));
+        picks.push(...nextPicks);
+      };
+
+      addPicks(
+        legendaryPool,
+        Math.min(requestedLegendaryCount, LEGENDARY_CAP, getAvailableCount(legendaryPool))
+      );
+      addPicks(
+        rarePool,
+        Math.min(requestedRareCount, RARE_CAP, ATTRIBUTE_COUNT - picks.length, getAvailableCount(rarePool))
+      );
+      const commonCount = ATTRIBUTE_COUNT - picks.length;
+      addPicks(commonPool, commonCount);
+
+      return shuffle(picks);
     }
 
     function getBingoCount(selectedIndexes) {
@@ -271,7 +310,7 @@
       const selectedIndexes = new Set([CENTER_INDEX]);
       let announcedBingoCount = 0;
       const locationPicks = pickUniqueRandom(locations, LOCATION_COUNT);
-      const attributePicks = pickUniqueRandom(window.videoAttributes, ATTRIBUTE_COUNT);
+      const attributePicks = getAttributePicks();
       const nonCenterIndexes = Array.from({ length: 25 }, (_, i) => i).filter((i) => i !== CENTER_INDEX);
       const locationIndexes = new Set(shuffle(nonCenterIndexes).slice(0, LOCATION_COUNT));
 
