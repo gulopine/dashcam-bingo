@@ -218,25 +218,37 @@
     function getAttributePicks() {
       const picks = [];
       const used = new Set();
-      const legendaryCount = Math.random() < 0.3 ? 1 : 0;
-      const rareRollCount = Array.from({ length: 3 }, () => Math.random() < 0.6).filter(Boolean).length;
+      const commonLabels = new Set(window.videoAttributes.common);
+      const rareLabels = new Set(window.videoAttributes.rare);
+      const lowerPriorityLabels = new Set([...commonLabels, ...rareLabels]);
+      const requestedLegendaryCount = Math.random() < 0.3 ? 1 : 0;
+      const requestedRareCount = Array.from({ length: 3 }, () => Math.random() < 0.6).filter(Boolean).length;
       const getAvailableCount = (items) => [...new Set(items)].filter((item) => !used.has(item)).length;
 
-      const addPicks = (items, count) => {
-        const nextPicks = pickUniqueRandom(items, Math.min(count, getAvailableCount(items)), used);
+      const addPicks = (items, count, reserved = new Set()) => {
+        const unique = [...new Set(shuffle(items))].filter((item) => !used.has(item));
+        if (unique.length < count) {
+          throw new Error("Not enough unique spaces to build card.");
+        }
+        const nextPicks = [
+          ...unique.filter((item) => !reserved.has(item)),
+          ...unique.filter((item) => reserved.has(item))
+        ].slice(0, count);
         nextPicks.forEach((item) => used.add(item));
         picks.push(...nextPicks);
       };
 
-      addPicks(window.videoAttributes.legendary, legendaryCount);
+      addPicks(
+        window.videoAttributes.legendary,
+        Math.min(requestedLegendaryCount, getAvailableCount(window.videoAttributes.legendary)),
+        lowerPriorityLabels
+      );
       addPicks(
         window.videoAttributes.rare,
-        Math.min(rareRollCount, ATTRIBUTE_COUNT - picks.length)
+        Math.min(requestedRareCount, ATTRIBUTE_COUNT - picks.length, getAvailableCount(window.videoAttributes.rare)),
+        commonLabels
       );
       const commonCount = ATTRIBUTE_COUNT - picks.length;
-      if (getAvailableCount(window.videoAttributes.common) < commonCount) {
-        throw new Error("Not enough unique common spaces to build card.");
-      }
       addPicks(window.videoAttributes.common, commonCount);
 
       return shuffle(picks);
