@@ -218,48 +218,40 @@
     function getAttributePicks() {
       const picks = [];
       const used = new Set();
-      const commonLabels = new Set(window.videoAttributes.common);
-      const rareLabels = new Set(window.videoAttributes.rare);
-      const lowerPriorityLabels = new Set([...commonLabels, ...rareLabels]);
       const requestedLegendaryCount = Math.random() < 0.3 ? 1 : 0;
       const requestedRareCount = Array.from({ length: 3 }, () => Math.random() < 0.6).filter(Boolean).length;
-      const getAvailableCount = (items) => [...new Set(items)].filter((item) => !used.has(item)).length;
+      const legendaryPool = [...new Set(window.videoAttributes.legendary)];
+      const legendaryLabels = new Set(legendaryPool);
+      const rarePool = [...new Set(window.videoAttributes.rare)].filter((item) => !legendaryLabels.has(item));
+      const rareLabels = new Set(rarePool);
+      const commonPool = [...new Set(window.videoAttributes.common)].filter(
+        (item) => !legendaryLabels.has(item) && !rareLabels.has(item)
+      );
+      const getAvailableCount = (items) => items.filter((item) => !used.has(item)).length;
 
-      const addPicks = (items, count, reserved = new Set()) => {
+      const addPicks = (items, count) => {
         if (count === 0) {
           return;
         }
-        const unique = [...new Set(shuffle(items))].filter((item) => !used.has(item));
+        const unique = shuffle(items).filter((item) => !used.has(item));
         if (unique.length < count) {
           throw new Error("Not enough unique spaces to build card.");
         }
-        const preferredPicks = [];
-        const reservedPicks = [];
-        for (const item of unique) {
-          if (reserved.has(item)) {
-            reservedPicks.push(item);
-          } else {
-            preferredPicks.push(item);
-          }
-        }
-        const nextPicks = preferredPicks.slice(0, count);
-        nextPicks.push(...reservedPicks.slice(0, count - nextPicks.length));
+        const nextPicks = unique.slice(0, count);
         nextPicks.forEach((item) => used.add(item));
         picks.push(...nextPicks);
       };
 
       addPicks(
-        window.videoAttributes.legendary,
-        Math.min(requestedLegendaryCount, getAvailableCount(window.videoAttributes.legendary)),
-        lowerPriorityLabels
+        legendaryPool,
+        Math.min(requestedLegendaryCount, getAvailableCount(legendaryPool))
       );
       addPicks(
-        window.videoAttributes.rare,
-        Math.min(requestedRareCount, ATTRIBUTE_COUNT - picks.length, getAvailableCount(window.videoAttributes.rare)),
-        commonLabels
+        rarePool,
+        Math.min(requestedRareCount, ATTRIBUTE_COUNT - picks.length, getAvailableCount(rarePool))
       );
       const commonCount = ATTRIBUTE_COUNT - picks.length;
-      addPicks(window.videoAttributes.common, commonCount);
+      addPicks(commonPool, commonCount);
 
       return shuffle(picks);
     }
