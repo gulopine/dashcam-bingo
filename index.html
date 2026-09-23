@@ -182,6 +182,8 @@
     const LOCATION_COUNT = 5;
     const NON_CENTER_SPACES = 24;
     const ATTRIBUTE_COUNT = NON_CENTER_SPACES - LOCATION_COUNT;
+    const LEGENDARY_CAP = 1;
+    const RARE_CAP = 3;
     const FIT_MODES = ["normal", "compact", "ultra-compact"];
     const BINGO_LINES = [
       [0, 1, 2, 3, 4],
@@ -218,8 +220,8 @@
     function getAttributePicks() {
       const picks = [];
       const used = new Set();
-      const requestedLegendaryCount = Math.random() < 0.3 ? 1 : 0;
-      const requestedRareCount = Array.from({ length: 3 }, () => Math.random() < 0.6).filter(Boolean).length;
+      const requestedLegendaryCount = Math.random() < 0.3 ? LEGENDARY_CAP : 0;
+      const requestedRareCount = Array.from({ length: RARE_CAP }, () => Math.random() < 0.6).filter(Boolean).length;
       const legendaryPool = [...new Set(window.videoAttributes.legendary)];
       const legendaryLabels = new Set(legendaryPool);
       const rarePool = [...new Set(window.videoAttributes.rare)].filter((item) => !legendaryLabels.has(item));
@@ -244,11 +246,11 @@
 
       addPicks(
         legendaryPool,
-        Math.min(requestedLegendaryCount, getAvailableCount(legendaryPool))
+        Math.min(requestedLegendaryCount, LEGENDARY_CAP, getAvailableCount(legendaryPool))
       );
       addPicks(
         rarePool,
-        Math.min(requestedRareCount, ATTRIBUTE_COUNT - picks.length, getAvailableCount(rarePool))
+        Math.min(requestedRareCount, RARE_CAP, ATTRIBUTE_COUNT - picks.length, getAvailableCount(rarePool))
       );
       const commonCount = ATTRIBUTE_COUNT - picks.length;
       addPicks(commonPool, commonCount);
