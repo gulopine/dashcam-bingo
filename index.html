@@ -223,12 +223,8 @@
       const requestedLegendaryCount = Math.random() < 0.3 ? LEGENDARY_CAP : 0;
       const requestedRareCount = Array.from({ length: RARE_CAP }, () => Math.random() < 0.6).filter(Boolean).length;
       const legendaryPool = [...new Set(window.videoAttributes.legendary)];
-      const legendaryLabels = new Set(legendaryPool);
-      const rarePool = [...new Set(window.videoAttributes.rare)].filter((item) => !legendaryLabels.has(item));
-      const rareLabels = new Set(rarePool);
-      const commonPool = [...new Set(window.videoAttributes.common)].filter(
-        (item) => !legendaryLabels.has(item) && !rareLabels.has(item)
-      );
+      const rarePool = [...new Set(window.videoAttributes.rare)];
+      const commonPool = [...new Set(window.videoAttributes.common)];
       const getAvailableCount = (items) => items.filter((item) => !used.has(item)).length;
 
       const addPicks = (items, count) => {
