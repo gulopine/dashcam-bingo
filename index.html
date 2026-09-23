@@ -219,7 +219,8 @@
       const picks = [];
       const used = new Set();
       const legendaryCount = Math.random() < 0.3 ? 1 : 0;
-      const rareCount = Array.from({ length: 3 }, () => Math.random() < 0.6).filter(Boolean).length;
+      const rareRollCount = Array.from({ length: 3 }, () => Math.random() < 0.6).filter(Boolean).length;
+      const rareCount = Math.min(rareRollCount, ATTRIBUTE_COUNT - legendaryCount);
       const commonCount = ATTRIBUTE_COUNT - legendaryCount - rareCount;
 
       const addPicks = (items, count) => {
