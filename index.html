@@ -220,18 +220,32 @@
       const used = new Set();
       const legendaryCount = Math.random() < 0.3 ? 1 : 0;
       const rareRollCount = Array.from({ length: 3 }, () => Math.random() < 0.6).filter(Boolean).length;
-      const rareCount = Math.min(rareRollCount, ATTRIBUTE_COUNT - legendaryCount);
-      const commonCount = ATTRIBUTE_COUNT - legendaryCount - rareCount;
 
       const addPicks = (items, count) => {
-        const nextPicks = pickUniqueRandom(items, count, used);
+        const availableCount = [...new Set(items)].filter((item) => !used.has(item)).length;
+        const nextPicks = pickUniqueRandom(items, Math.min(count, availableCount), used);
         nextPicks.forEach((item) => used.add(item));
         picks.push(...nextPicks);
       };
 
       addPicks(window.videoAttributes.legendary, legendaryCount);
-      addPicks(window.videoAttributes.rare, rareCount);
-      addPicks(window.videoAttributes.common, commonCount);
+      addPicks(
+        window.videoAttributes.rare,
+        Math.min(rareRollCount, ATTRIBUTE_COUNT - picks.length)
+      );
+      addPicks(window.videoAttributes.common, ATTRIBUTE_COUNT - picks.length);
+
+      if (picks.length < ATTRIBUTE_COUNT) {
+        addPicks(window.videoAttributes.rare, ATTRIBUTE_COUNT - picks.length);
+      }
+
+      if (picks.length < ATTRIBUTE_COUNT) {
+        addPicks(window.videoAttributes.legendary, ATTRIBUTE_COUNT - picks.length);
+      }
+
+      if (picks.length < ATTRIBUTE_COUNT) {
+        throw new Error("Not enough unique spaces to build card.");
+      }
 
       return shuffle(picks);
     }
