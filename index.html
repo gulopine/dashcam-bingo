@@ -233,18 +233,16 @@
         if (unique.length < count) {
           throw new Error("Not enough unique spaces to build card.");
         }
-        const nextPicks = [];
+        const preferredPicks = [];
         const reservedPicks = [];
         for (const item of unique) {
           if (reserved.has(item)) {
             reservedPicks.push(item);
           } else {
-            nextPicks.push(item);
-          }
-          if (nextPicks.length === count) {
-            break;
+            preferredPicks.push(item);
           }
         }
+        const nextPicks = preferredPicks.slice(0, count);
         nextPicks.push(...reservedPicks.slice(0, count - nextPicks.length));
         nextPicks.forEach((item) => used.add(item));
         picks.push(...nextPicks);
