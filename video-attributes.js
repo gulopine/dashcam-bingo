@@ -41,7 +41,7 @@ window.videoAttributes = {
     "Anonymous",
     "Wrong pedal",
     "Fluid leak",
-    "squealing tires",
+    "Squealing tires",
   ],
   "rare": [
     "No insurance",
