@@ -226,14 +226,26 @@
       const getAvailableCount = (items) => [...new Set(items)].filter((item) => !used.has(item)).length;
 
       const addPicks = (items, count, reserved = new Set()) => {
+        if (count === 0) {
+          return;
+        }
         const unique = [...new Set(shuffle(items))].filter((item) => !used.has(item));
         if (unique.length < count) {
           throw new Error("Not enough unique spaces to build card.");
         }
-        const nextPicks = [
-          ...unique.filter((item) => !reserved.has(item)),
-          ...unique.filter((item) => reserved.has(item))
-        ].slice(0, count);
+        const nextPicks = [];
+        const reservedPicks = [];
+        for (const item of unique) {
+          if (reserved.has(item)) {
+            reservedPicks.push(item);
+          } else {
+            nextPicks.push(item);
+          }
+          if (nextPicks.length === count) {
+            break;
+          }
+        }
+        nextPicks.push(...reservedPicks.slice(0, count - nextPicks.length));
         nextPicks.forEach((item) => used.add(item));
         picks.push(...nextPicks);
       };
