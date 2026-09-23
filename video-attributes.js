@@ -91,7 +91,6 @@ window.videoAttributes = {
     "Police chase",
     "Helmet cam",
     "Crash with no damage",
-    "Foreign country",
     "Animals",
     "Missing wheel",
     "Blown tire",

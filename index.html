@@ -162,16 +162,24 @@
 
   <script src="./video-attributes.js"></script>
   <script>
-    const locations = [
-      "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia",
-      "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland",
-      "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
-      "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
-      "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
-      "West Virginia", "Wisconsin", "Wyoming", "District of Columbia",
-      "Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador", "Nova Scotia", "Ontario",
-      "Prince Edward Island", "Quebec", "Saskatchewan"
-    ];
+    const locations = {
+      common: [
+        "Alabama", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Florida", "Georgia",
+        "Illinois", "Indiana", "Kentucky", "Louisiana", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+        "Missouri", "Nevada", "New Jersey", "New York", "North Carolina", "Ohio", "Oklahoma", "Oregon",
+        "Pennsylvania", "South Carolina", "Tennessee", "Texas", "Utah", "Virginia", "Washington", "Wisconsin",
+        "Alberta", "British Columbia", "Ontario", "Quebec"
+      ],
+      rare: [
+        "Alaska", "Delaware", "District of Columbia", "Hawaii", "Idaho", "Iowa", "Kansas", "Maine",
+        "Mississippi", "Montana", "Nebraska", "New Hampshire", "New Mexico", "North Dakota", "Rhode Island",
+        "South Dakota", "Vermont", "West Virginia", "Wyoming", "Manitoba", "New Brunswick", "Nova Scotia",
+        "Saskatchewan"
+      ],
+      legendary: [
+        "Newfoundland and Labrador", "Prince Edward Island", "Foreign country"
+      ]
+    };
 
     const CENTER_INDEX = 12;
     const CENTER_TEXT = "DASHCAM";
@@ -205,22 +213,14 @@
       return copy;
     }
 
-    function pickUniqueRandom(items, count, excluded = new Set()) {
-      const unique = [...new Set(shuffle(items))].filter((item) => !excluded.has(item));
-      if (unique.length < count) {
-        throw new Error("Not enough unique spaces to build card.");
-      }
-      return unique.slice(0, count);
-    }
-
-    function getAttributePicks() {
+    function getRarityPicks(rarityPools, count) {
       const picks = [];
       const used = new Set();
       const requestedLegendaryCount = Math.random() < 0.3 ? LEGENDARY_CAP : 0;
       const requestedRareCount = Array.from({ length: RARE_CAP }, () => Math.random() < 0.6).filter(Boolean).length;
-      const legendaryPool = [...new Set(window.videoAttributes.legendary)];
-      const rarePool = [...new Set(window.videoAttributes.rare)];
-      const commonPool = [...new Set(window.videoAttributes.common)];
+      const legendaryPool = [...new Set(rarityPools.legendary)];
+      const rarePool = [...new Set(rarityPools.rare)];
+      const commonPool = [...new Set(rarityPools.common)];
       const getAvailableCount = (items) => items.filter((item) => !used.has(item)).length;
 
       const addPicks = (items, count) => {
@@ -242,12 +242,20 @@
       );
       addPicks(
         rarePool,
-        Math.min(requestedRareCount, RARE_CAP, ATTRIBUTE_COUNT - picks.length, getAvailableCount(rarePool))
+        Math.min(requestedRareCount, RARE_CAP, count - picks.length, getAvailableCount(rarePool))
       );
-      const commonCount = ATTRIBUTE_COUNT - picks.length;
+      const commonCount = count - picks.length;
       addPicks(commonPool, commonCount);
 
       return shuffle(picks);
+    }
+
+    function getAttributePicks() {
+      return getRarityPicks(window.videoAttributes, ATTRIBUTE_COUNT);
+    }
+
+    function getLocationPicks() {
+      return getRarityPicks(locations, LOCATION_COUNT);
     }
 
     function getBingoCount(selectedIndexes) {
@@ -305,7 +313,7 @@
       const bingoMessage = document.getElementById("bingo-message");
       const selectedIndexes = new Set([CENTER_INDEX]);
       let announcedBingoCount = 0;
-      const locationPicks = pickUniqueRandom(locations, LOCATION_COUNT);
+      const locationPicks = getLocationPicks();
       const attributePicks = getAttributePicks();
       const nonCenterIndexes = Array.from({ length: 25 }, (_, i) => i).filter((i) => i !== CENTER_INDEX);
       const locationIndexes = new Set(shuffle(nonCenterIndexes).slice(0, LOCATION_COUNT));
