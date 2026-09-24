@@ -167,6 +167,7 @@
     const CENTER_TEXT = "DASHCAM";
     const LOCATION_COUNT = 5;
     const NON_CENTER_SPACES = 24;
+    const ATTRIBUTE_COUNT = NON_CENTER_SPACES - LOCATION_COUNT;
     const LOCATION_LEGENDARY_CAP = 0;
     const LOCATION_RARE_CAP = 2;
     const FIT_MODES = ["normal", "compact", "ultra-compact"];
@@ -249,15 +250,19 @@
           rare: filteredAttributePools.rare,
           legendary: filteredAttributePools.legendary
         },
-        NON_CENTER_SPACES - locationPicks.length
+        ATTRIBUTE_COUNT
       );
     }
 
     function getLocationPicks() {
-      return getRarityPicks(window.locations, LOCATION_COUNT, {
+      const locationPicks = getRarityPicks(window.locations, LOCATION_COUNT, {
         legendaryCap: LOCATION_LEGENDARY_CAP,
         rareCap: LOCATION_RARE_CAP
       });
+      if (locationPicks.length !== LOCATION_COUNT) {
+        throw new Error("Not enough location spaces to build card.");
+      }
+      return locationPicks;
     }
 
     function getBingoCount(selectedIndexes) {
