@@ -165,9 +165,8 @@
   <script>
     const CENTER_INDEX = 12;
     const CENTER_TEXT = "DASHCAM";
-    const LOCATION_COUNT = 5;
+    const MAX_LOCATION_COUNT = 5;
     const NON_CENTER_SPACES = 24;
-    const ATTRIBUTE_COUNT = NON_CENTER_SPACES - LOCATION_COUNT;
     const ATTRIBUTE_LEGENDARY_CAP = 1;
     const ATTRIBUTE_RARE_CAP = 3;
     const LOCATION_LEGENDARY_CAP = 0;
@@ -200,7 +199,7 @@
     function getRarityPicks(
       rarityPools,
       count,
-      { legendaryCap, rareCap, usedItems = [] }
+      { legendaryCap, rareCap, usedItems = [], allowShortfall = false }
     ) {
       const picks = [];
       const used = new Set(usedItems);
@@ -216,23 +215,61 @@
           return;
         }
         const unique = shuffle(items).filter((item) => !used.has(item));
-        if (unique.length < count) {
+        if (unique.length < count && !allowShortfall) {
           throw new Error("Not enough unique spaces to build card.");
         }
-        const nextPicks = unique.slice(0, count);
+        const nextPicks = unique.slice(0, Math.min(count, unique.length));
         nextPicks.forEach((item) => used.add(item));
         picks.push(...nextPicks);
       };
 
+      let legendaryCount = Math.min(
+        requestedLegendaryCount,
+        legendaryCap,
+        count,
+        getAvailableCount(legendaryPool)
+      );
+      let rareCount = Math.min(
+        requestedRareCount,
+        rareCap,
+        count - legendaryCount,
+        getAvailableCount(rarePool)
+      );
+      const commonAvailableCount = getAvailableCount(commonPool);
+      let commonCount = count - legendaryCount - rareCount;
+
+      if (commonCount > commonAvailableCount) {
+        let shortfall = commonCount - commonAvailableCount;
+        const extraRareCount = Math.min(
+          rareCap - rareCount,
+          getAvailableCount(rarePool) - rareCount,
+          shortfall
+        );
+        rareCount += extraRareCount;
+        shortfall -= extraRareCount;
+
+        const extraLegendaryCount = Math.min(
+          legendaryCap - legendaryCount,
+          getAvailableCount(legendaryPool) - legendaryCount,
+          shortfall
+        );
+        legendaryCount += extraLegendaryCount;
+        shortfall -= extraLegendaryCount;
+        commonCount = commonAvailableCount;
+
+        if (shortfall > 0 && !allowShortfall) {
+          throw new Error("Not enough unique spaces to build card.");
+        }
+      }
+
       addPicks(
         legendaryPool,
-        Math.min(requestedLegendaryCount, legendaryCap, getAvailableCount(legendaryPool))
+        legendaryCount
       );
       addPicks(
         rarePool,
-        Math.min(requestedRareCount, rareCap, count - picks.length, getAvailableCount(rarePool))
+        rareCount
       );
-      const commonCount = count - picks.length;
       addPicks(commonPool, commonCount);
 
       return shuffle(picks);
@@ -250,7 +287,7 @@
           rare: window.videoAttributes.rare,
           legendary: window.videoAttributes.legendary
         },
-        ATTRIBUTE_COUNT,
+        NON_CENTER_SPACES - locationPicks.length,
         {
           legendaryCap: ATTRIBUTE_LEGENDARY_CAP,
           rareCap: ATTRIBUTE_RARE_CAP,
@@ -260,14 +297,11 @@
     }
 
     function getLocationPicks() {
-      const locationPicks = getRarityPicks(window.locations, LOCATION_COUNT, {
+      return getRarityPicks(window.locations, MAX_LOCATION_COUNT, {
         legendaryCap: LOCATION_LEGENDARY_CAP,
-        rareCap: LOCATION_RARE_CAP
+        rareCap: LOCATION_RARE_CAP,
+        allowShortfall: true
       });
-      if (locationPicks.length !== LOCATION_COUNT) {
-        throw new Error("Not enough location spaces to build card.");
-      }
-      return locationPicks;
     }
 
     function getBingoCount(selectedIndexes) {
@@ -328,7 +362,7 @@
       const locationPicks = getLocationPicks();
       const attributePicks = getAttributePicks(locationPicks);
       const nonCenterIndexes = Array.from({ length: 25 }, (_, i) => i).filter((i) => i !== CENTER_INDEX);
-      const locationIndexes = new Set(shuffle(nonCenterIndexes).slice(0, LOCATION_COUNT));
+      const locationIndexes = new Set(shuffle(nonCenterIndexes).slice(0, locationPicks.length));
 
       card.innerHTML = "";
 
