@@ -161,33 +161,17 @@
   <p class="bingo-message" id="bingo-message" role="status" aria-live="polite"></p>
 
   <script src="./video-attributes.js"></script>
+  <script src="./locations.js"></script>
   <script>
-    const locations = {
-      common: [
-        "Alabama", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Florida", "Georgia",
-        "Illinois", "Indiana", "Kentucky", "Louisiana", "Maryland", "Massachusetts", "Michigan", "Minnesota",
-        "Missouri", "Nevada", "New Jersey", "New York", "North Carolina", "Ohio", "Oklahoma", "Oregon",
-        "Pennsylvania", "South Carolina", "Tennessee", "Texas", "Utah", "Virginia", "Washington", "Wisconsin",
-        "Alberta", "British Columbia", "Ontario", "Quebec"
-      ],
-      rare: [
-        "Alaska", "Delaware", "District of Columbia", "Hawaii", "Idaho", "Iowa", "Kansas", "Maine",
-        "Mississippi", "Montana", "Nebraska", "New Hampshire", "New Mexico", "North Dakota", "Rhode Island",
-        "South Dakota", "Vermont", "West Virginia", "Wyoming", "Manitoba", "New Brunswick", "Nova Scotia",
-        "Saskatchewan"
-      ],
-      legendary: [
-        "Newfoundland and Labrador", "Prince Edward Island", "Foreign country"
-      ]
-    };
-
     const CENTER_INDEX = 12;
     const CENTER_TEXT = "DASHCAM";
     const LOCATION_COUNT = 5;
     const NON_CENTER_SPACES = 24;
     const ATTRIBUTE_COUNT = NON_CENTER_SPACES - LOCATION_COUNT;
-    const LEGENDARY_CAP = 1;
-    const RARE_CAP = 3;
+    const ATTRIBUTE_LEGENDARY_CAP = 1;
+    const ATTRIBUTE_RARE_CAP = 3;
+    const LOCATION_LEGENDARY_CAP = 0;
+    const LOCATION_RARE_CAP = 2;
     const FIT_MODES = ["normal", "compact", "ultra-compact"];
     const BINGO_LINES = [
       [0, 1, 2, 3, 4],
@@ -213,11 +197,15 @@
       return copy;
     }
 
-    function getRarityPicks(rarityPools, count) {
+    function getRarityPicks(
+      rarityPools,
+      count,
+      { legendaryCap, rareCap, usedItems = [] }
+    ) {
       const picks = [];
-      const used = new Set();
-      const requestedLegendaryCount = Math.random() < 0.3 ? LEGENDARY_CAP : 0;
-      const requestedRareCount = Array.from({ length: RARE_CAP }, () => Math.random() < 0.6).filter(Boolean).length;
+      const used = new Set(usedItems);
+      const requestedLegendaryCount = Math.random() < 0.3 ? legendaryCap : 0;
+      const requestedRareCount = Array.from({ length: rareCap }, () => Math.random() < 0.6).filter(Boolean).length;
       const legendaryPool = [...new Set(rarityPools.legendary)];
       const rarePool = [...new Set(rarityPools.rare)];
       const commonPool = [...new Set(rarityPools.common)];
@@ -238,11 +226,11 @@
 
       addPicks(
         legendaryPool,
-        Math.min(requestedLegendaryCount, LEGENDARY_CAP, getAvailableCount(legendaryPool))
+        Math.min(requestedLegendaryCount, legendaryCap, getAvailableCount(legendaryPool))
       );
       addPicks(
         rarePool,
-        Math.min(requestedRareCount, RARE_CAP, count - picks.length, getAvailableCount(rarePool))
+        Math.min(requestedRareCount, rareCap, count - picks.length, getAvailableCount(rarePool))
       );
       const commonCount = count - picks.length;
       addPicks(commonPool, commonCount);
@@ -250,12 +238,36 @@
       return shuffle(picks);
     }
 
-    function getAttributePicks() {
-      return getRarityPicks(window.videoAttributes, ATTRIBUTE_COUNT);
+    function getAttributePicks(locationPicks) {
+      const combinedCommonPool = [...new Set([
+        ...window.videoAttributes.common,
+        ...window.locations.common
+      ])];
+
+      return getRarityPicks(
+        {
+          common: combinedCommonPool,
+          rare: window.videoAttributes.rare,
+          legendary: window.videoAttributes.legendary
+        },
+        ATTRIBUTE_COUNT,
+        {
+          legendaryCap: ATTRIBUTE_LEGENDARY_CAP,
+          rareCap: ATTRIBUTE_RARE_CAP,
+          usedItems: locationPicks
+        }
+      );
     }
 
     function getLocationPicks() {
-      return getRarityPicks(locations, LOCATION_COUNT);
+      const locationPicks = getRarityPicks(window.locations, LOCATION_COUNT, {
+        legendaryCap: LOCATION_LEGENDARY_CAP,
+        rareCap: LOCATION_RARE_CAP
+      });
+      if (locationPicks.length !== LOCATION_COUNT) {
+        throw new Error("Not enough location spaces to build card.");
+      }
+      return locationPicks;
     }
 
     function getBingoCount(selectedIndexes) {
@@ -314,7 +326,7 @@
       const selectedIndexes = new Set([CENTER_INDEX]);
       let announcedBingoCount = 0;
       const locationPicks = getLocationPicks();
-      const attributePicks = getAttributePicks();
+      const attributePicks = getAttributePicks(locationPicks);
       const nonCenterIndexes = Array.from({ length: 25 }, (_, i) => i).filter((i) => i !== CENTER_INDEX);
       const locationIndexes = new Set(shuffle(nonCenterIndexes).slice(0, LOCATION_COUNT));
 
