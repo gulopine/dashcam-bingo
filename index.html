@@ -195,9 +195,13 @@
       return copy;
     }
 
-    function getRarityPicks(rarityPools, count, { legendaryCap = 1, rareCap = 3 } = {}) {
+    function getRarityPicks(
+      rarityPools,
+      count,
+      { legendaryCap = 1, rareCap = 3, usedItems = [] } = {}
+    ) {
       const picks = [];
-      const used = new Set();
+      const used = new Set(usedItems);
       const requestedLegendaryCount = Math.random() < 0.3 ? legendaryCap : 0;
       const requestedRareCount = Array.from({ length: rareCap }, () => Math.random() < 0.6).filter(Boolean).length;
       const legendaryPool = [...new Set(rarityPools.legendary)];
@@ -233,24 +237,19 @@
     }
 
     function getAttributePicks(locationPicks) {
-      const locationSet = new Set(locationPicks);
-      const filteredAttributePools = {
-        common: window.videoAttributes.common.filter((item) => !locationSet.has(item)),
-        rare: window.videoAttributes.rare.filter((item) => !locationSet.has(item)),
-        legendary: window.videoAttributes.legendary.filter((item) => !locationSet.has(item))
-      };
       const combinedCommonPool = [...new Set([
-        ...filteredAttributePools.common,
-        ...window.locations.common.filter((item) => !locationSet.has(item))
+        ...window.videoAttributes.common,
+        ...window.locations.common
       ])];
 
       return getRarityPicks(
         {
           common: combinedCommonPool,
-          rare: filteredAttributePools.rare,
-          legendary: filteredAttributePools.legendary
+          rare: window.videoAttributes.rare,
+          legendary: window.videoAttributes.legendary
         },
-        ATTRIBUTE_COUNT
+        ATTRIBUTE_COUNT,
+        { usedItems: locationPicks }
       );
     }
 
