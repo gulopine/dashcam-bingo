@@ -168,6 +168,8 @@
     const LOCATION_COUNT = 5;
     const NON_CENTER_SPACES = 24;
     const ATTRIBUTE_COUNT = NON_CENTER_SPACES - LOCATION_COUNT;
+    const ATTRIBUTE_LEGENDARY_CAP = 1;
+    const ATTRIBUTE_RARE_CAP = 3;
     const LOCATION_LEGENDARY_CAP = 0;
     const LOCATION_RARE_CAP = 2;
     const FIT_MODES = ["normal", "compact", "ultra-compact"];
@@ -198,7 +200,7 @@
     function getRarityPicks(
       rarityPools,
       count,
-      { legendaryCap = 1, rareCap = 3, usedItems = [] } = {}
+      { legendaryCap, rareCap, usedItems = [] }
     ) {
       const picks = [];
       const used = new Set(usedItems);
@@ -249,7 +251,11 @@
           legendary: window.videoAttributes.legendary
         },
         ATTRIBUTE_COUNT,
-        { usedItems: locationPicks }
+        {
+          legendaryCap: ATTRIBUTE_LEGENDARY_CAP,
+          rareCap: ATTRIBUTE_RARE_CAP,
+          usedItems: locationPicks
+        }
       );
     }
 
