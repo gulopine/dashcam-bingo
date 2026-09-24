@@ -238,10 +238,10 @@
         rare: window.videoAttributes.rare.filter((item) => !locationSet.has(item)),
         legendary: window.videoAttributes.legendary.filter((item) => !locationSet.has(item))
       };
-      const combinedCommonPool = [
+      const combinedCommonPool = [...new Set([
         ...filteredAttributePools.common,
         ...window.locations.common.filter((item) => !locationSet.has(item))
-      ];
+      ])];
 
       return getRarityPicks(
         {
