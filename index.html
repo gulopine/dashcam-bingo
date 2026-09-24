@@ -71,6 +71,7 @@
       appearance: none;
       width: 100%;
       overflow: hidden;
+      transition: background 0.15s ease-in-out, color 0.15s ease-in-out, text-shadow 0.15s ease-in-out;
     }
 
     .square-label {
@@ -96,6 +97,21 @@
 
     .square.location-square .square-label {
       -webkit-line-clamp: 5;
+    }
+
+    .square.location-square:not(.selected):not(.free) {
+      background: #243244;
+      color: #eef2ff;
+    }
+
+    .square.rare-square:not(.selected):not(.free) {
+      color: #fcd48b;
+      text-shadow: 0 0 0.35rem rgba(252, 211, 77, 0.18);
+    }
+
+    .square.legendary-square:not(.selected):not(.free) {
+      color: #f5ddff;
+      text-shadow: 0 0 0.55rem rgba(216, 180, 254, 0.38);
     }
 
     .free {
@@ -213,7 +229,7 @@
       return copy;
     }
 
-    function getRarityPicks(rarityPools, count) {
+    function getRarityPicks(rarityPools, count, tileType) {
       const picks = [];
       const used = new Set();
       const requestedLegendaryCount = Math.random() < 0.3 ? LEGENDARY_CAP : 0;
@@ -223,7 +239,7 @@
       const commonPool = [...new Set(rarityPools.common)];
       const getAvailableCount = (items) => items.filter((item) => !used.has(item)).length;
 
-      const addPicks = (items, count) => {
+      const addPicks = (items, count, rarity) => {
         if (count === 0) {
           return;
         }
@@ -233,29 +249,31 @@
         }
         const nextPicks = unique.slice(0, count);
         nextPicks.forEach((item) => used.add(item));
-        picks.push(...nextPicks);
+        picks.push(...nextPicks.map((label) => ({ label, rarity, tileType })));
       };
 
       addPicks(
         legendaryPool,
-        Math.min(requestedLegendaryCount, LEGENDARY_CAP, getAvailableCount(legendaryPool))
+        Math.min(requestedLegendaryCount, LEGENDARY_CAP, getAvailableCount(legendaryPool)),
+        "legendary"
       );
       addPicks(
         rarePool,
-        Math.min(requestedRareCount, RARE_CAP, count - picks.length, getAvailableCount(rarePool))
+        Math.min(requestedRareCount, RARE_CAP, count - picks.length, getAvailableCount(rarePool)),
+        "rare"
       );
       const commonCount = count - picks.length;
-      addPicks(commonPool, commonCount);
+      addPicks(commonPool, commonCount, "common");
 
       return shuffle(picks);
     }
 
     function getAttributePicks() {
-      return getRarityPicks(window.videoAttributes, ATTRIBUTE_COUNT);
+      return getRarityPicks(window.videoAttributes, ATTRIBUTE_COUNT, "attribute");
     }
 
     function getLocationPicks() {
-      return getRarityPicks(locations, LOCATION_COUNT);
+      return getRarityPicks(locations, LOCATION_COUNT, "location");
     }
 
     function getBingoCount(selectedIndexes) {
@@ -333,10 +351,14 @@
           cell.setAttribute("aria-pressed", "true");
           cell.disabled = true;
         } else if (locationIndexes.has(i)) {
+          const tile = locationPicks.shift();
           cell.classList.add("location-square");
-          cellLabel.textContent = formatLocationLabel(locationPicks.shift());
+          cell.classList.add(`${tile.rarity}-square`);
+          cellLabel.textContent = formatLocationLabel(tile.label);
         } else {
-          cellLabel.textContent = attributePicks.shift();
+          const tile = attributePicks.shift();
+          cell.classList.add(`${tile.rarity}-square`);
+          cellLabel.textContent = tile.label;
         }
 
         cell.appendChild(cellLabel);
