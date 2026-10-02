@@ -2,7 +2,6 @@ window.videoAttributes = {
   "common": [
     "Ran a red light",
     "Ran a stop sign",
-    "U-turn",
     "Hit and run",
     "Rear-end",
     "Sideswipe",
@@ -42,6 +41,7 @@ window.videoAttributes = {
     "Wrong pedal",
     "Fluid leak",
     "Squealing tires",
+    "Location unknown",
   ],
   "rare": [
     "No insurance",
@@ -82,6 +82,10 @@ window.videoAttributes = {
     "Unprotected turn",
     "Car in water",
     "Atypical vehicle",
+    "Stationary camera",
+    "Bad merge",
+    "Missed exit",
+    "U-turn",
   ],
   "legendary": [
     "Lightning",
